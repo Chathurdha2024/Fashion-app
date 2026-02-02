@@ -4,6 +4,9 @@ pipeline {
     environment {
         DOCKERHUB_CREDENTIALS = 'dockerhub-credentials'
         DOCKERHUB_USERNAME = 'hasangi123'
+        EC2_PUBLIC_IP = '13.234.116.85' 
+        EC2_USER = 'ubuntu'
+        SSH_KEY_ID = 'fashion-aws-key'
     }
 
     stages {
@@ -15,44 +18,76 @@ pipeline {
             }
         }
 
-        stage('Login to Docker Hub') {
+        stage('Build Frontend Docker Image') {
+            steps {
+                script {
+                    sh "docker build --build-arg VITE_BACKEND_URL=http://${EC2_PUBLIC_IP}:4000 -t ${DOCKERHUB_USERNAME}/forever-fashion-app-frontend:latest ./frontend"
+                }
+            }
+        }
+
+        stage('Build Backend Docker Image') {
+            steps {
+                script {
+                    sh "docker build -t ${DOCKERHUB_USERNAME}/forever-fashion-app-backend:latest ./backend"
+                }
+            }
+        }
+
+        stage('Build Admin Docker Image') {
+            steps {
+                script {
+                    sh "docker build --build-arg VITE_BACKEND_URL=http://${EC2_PUBLIC_IP}:4000 -t ${DOCKERHUB_USERNAME}/forever-fashion-app-admin:latest ./admin"
+                }
+            }
+        }
+
+        stage('Push Frontend Docker Image') {
             steps {
                 script {
                     withCredentials([usernamePassword(credentialsId: DOCKERHUB_CREDENTIALS, usernameVariable: 'USER', passwordVariable: 'PASS')]) {
                         sh "echo $PASS | docker login -u $USER --password-stdin"
+                        sh "docker push ${DOCKERHUB_USERNAME}/forever-fashion-app-frontend:latest"
                     }
                 }
             }
         }
 
-        stage('Build Docker Images') {
+        stage('Push Backend Docker Image') {
             steps {
                 script {
-                    sh "docker build -t ${DOCKERHUB_USERNAME}/forever-fashion-app-frontend:latest ./frontend"
-                    sh "docker build -t ${DOCKERHUB_USERNAME}/forever-fashion-app-backend:latest ./backend"
-                    sh "docker build -t ${DOCKERHUB_USERNAME}/forever-fashion-app-admin:latest ./admin"
+                    withCredentials([usernamePassword(credentialsId: DOCKERHUB_CREDENTIALS, usernameVariable: 'USER', passwordVariable: 'PASS')]) {
+                        sh "echo $PASS | docker login -u $USER --password-stdin"
+                        sh "docker push ${DOCKERHUB_USERNAME}/forever-fashion-app-backend:latest"
+                    }
                 }
             }
         }
 
-        stage('Push Docker Images') {
+        stage('Push Admin Docker Image') {
             steps {
                 script {
-                    sh "docker push ${DOCKERHUB_USERNAME}/forever-fashion-app-frontend:latest"
-                    sh "docker push ${DOCKERHUB_USERNAME}/forever-fashion-app-backend:latest"
-                    sh "docker push ${DOCKERHUB_USERNAME}/forever-fashion-app-admin:latest"
+                    withCredentials([usernamePassword(credentialsId: DOCKERHUB_CREDENTIALS, usernameVariable: 'USER', passwordVariable: 'PASS')]) {
+                        sh "echo $PASS | docker login -u $USER --password-stdin"
+                        sh "docker push ${DOCKERHUB_USERNAME}/forever-fashion-app-admin:latest"
+                    }
                 }
             }
         }
-
-        stage('Optional: Run Docker Compose') {
-            steps {
-                script {
-                    // Only if your Jenkins agent can run Docker Compose
-                    sh "docker-compose up -d"
-                }
+        stage('Deploy to EC2') {
+    steps {
+        script {
+            sshagent(credentials: [SSH_KEY_ID]) {
+                // 1. Copy the docker-compose file
+                sh "scp -o StrictHostKeyChecking=no docker-compose.yml ${EC2_USER}@${EC2_PUBLIC_IP}:/home/ubuntu/docker-compose.yml"
+                
+                // 2. SSH and Deploy using a single string of command
+                sh "ssh -o StrictHostKeyChecking=no ${EC2_USER}@${EC2_PUBLIC_IP} 'sudo docker compose pull && sudo docker compose up -d && sudo docker image prune -f'"
             }
         }
+    }
+}
+        
     }
 
     post {

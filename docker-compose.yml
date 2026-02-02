@@ -1,40 +1,34 @@
 services:
   backend:
-    build: ./backend
+    image: hasangi123/forever-fashion-app-backend:latest
     container_name: backend
     ports:
       - "4000:4000"
-    env_file:
-      - ./backend/.env
-    restart: unless-stopped
-    command: >
-      sh -c "
-      
-      echo '🚀 Backend   : http://localhost:4000' &&
-      echo '🖥 Frontend  : http://localhost:5173' &&
-      echo '🛠 Admin     : http://localhost:3002' &&
-      
-      node server.js
-      "
+    environment:
+      - NODE_ENV=production
+      - MONGODB_URI=mongodb+srv://hasangidahanayake:hasangi123@cluster0.6wssoxp.mongodb.net
+      - CLOUDINARY_NAME=dzqhcetwo
+      - CLOUDINARY_API_KEY=898722333981874
+      - CLOUDINARY_SECRET_KEY=QlDp5aelUnd8Gi-_p7nGsW25XT8
+      -_EMAIL=admin@123.com
+      -ADMIN_PASSWORD=admin123
+      - JWT_SECRET=hasangi
+    restart: always
 
   frontend:
-    build: ./frontend
+    image: hasangi123/forever-fashion-app-frontend:latest
     container_name: frontend
     ports:
-      - "5173:80"
-    env_file:
-      - ./frontend/.env
-    depends_on:
-      - backend
-    restart: unless-stopped
+      - "5173:5173"
+    environment:
+      - VITE_BACKEND_URL=http://13.234.116.85:4000
+    restart: always
 
   admin:
-    build: ./admin
+    image: hasangi123/forever-fashion-app-admin:latest
     container_name: admin
     ports:
-      - "3002:80"
-    env_file:
-      - ./admin/.env
-    depends_on:
-      - backend
-    restart: unless-stopped
+      - "5174:5174"
+    environment:
+      - VITE_BACKEND_URL=http://13.234.116.85:4000
+    restart: always

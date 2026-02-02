@@ -7,7 +7,7 @@ const Login = () => {
 
   const [currentState, setCurrentState] = useState('Login');
   const { token, setToken, navigate, backendUrl } = useContext(ShopContext)
-
+  
   const [name,setName] = useState('')
   const [password,setPassword] = useState('')
   const [email,setEmail] = useState('')
@@ -18,7 +18,7 @@ const Login = () => {
     try {
       if (currentState === 'Sign Up') {
         
-        const response = await axios.post("http://localhost:4000/api/user/register",{name,email,password})
+        const response = await axios.post(backendUrl + "/api/user/register",{name,email,password})
         if (response.data.success) {
           setToken(response.data.token)
           localStorage.setItem('token',response.data.token)
@@ -27,7 +27,7 @@ const Login = () => {
         }
         
       }else{ //current state === login
-          const response = await axios.post("http://localhost:4000/api/user/login",{email,password})
+          const response = await axios.post(backendUrl + "/api/user/login",{email,password})
           if (response.data.success) {
             setToken(response.data.token)
             localStorage.setItem('token',response.data.token)

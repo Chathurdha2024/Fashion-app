@@ -10,13 +10,14 @@ const Orders = () => {
 
   const [orders,setOrders] = useState([])
   const token = localStorage.getItem("token");
-  
+  const backendUrl = import.meta.env.VITE_BACKEND_URL;
+
   const fetchAllOrders = async () => {
   if (!token) return;
 
   try {
     const response = await axios.post(
-      "http://localhost:4000/api/order/list",
+      backendUrl + "/api/order/list",
       {},
       { headers: { token } }
     );
@@ -33,7 +34,7 @@ const Orders = () => {
 const statusHandler = async (event, orderId) => {
   try {
     const response = await axios.post(
-      "http://localhost:4000/api/order/status",
+      backendUrl + "/api/order/status",
       { orderId, status: event.target.value },
       { headers: { token } }
     );

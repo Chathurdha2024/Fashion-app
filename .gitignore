@@ -1,0 +1,8 @@
+# Terraform files
+.terraform/
+*.tfstate
+*.tfstate.backup
+*.pem
+
+# Node files
+node_modules/
