@@ -8,8 +8,7 @@ pipeline {
         EC2_USER = 'ubuntu'
         SSH_KEY_ID = 'fashion-aws-key'
     }
-
-
+    
     stages {
         stage('Clone') {
             steps {
