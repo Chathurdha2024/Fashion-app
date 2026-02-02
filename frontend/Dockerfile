@@ -1,24 +1,23 @@
-# build stage
-FROM node:20 AS build
+# Stage 1: Build the React (Vite) app
+FROM node:20
 
+# Set working directory inside container
 WORKDIR /app
 
 ARG VITE_BACKEND_URL
 ENV VITE_BACKEND_URL=$VITE_BACKEND_URL
 
+# Copy package files and install dependencies
 COPY package*.json ./
 RUN npm install
 
+# Copy rest of the project files
 COPY . .
+
+# Build the production version of the app
 RUN npm run build
 
-# serve stage
-FROM nginx:alpine
 
-# copy build output to nginx html folder
-COPY --from=build /app/dist /usr/share/nginx/html
+EXPOSE 5173
 
-# expose the nginx port
-EXPOSE 80
-
-CMD ["nginx", "-g", "daemon off;"]
+CMD ["npm", "run", "preview", "--", "--port", "5173", "--host", "0.0.0.0"]
