@@ -10,8 +10,8 @@ services:
       - CLOUDINARY_NAME=dzqhcetwo
       - CLOUDINARY_API_KEY=898722333981874
       - CLOUDINARY_SECRET_KEY=QlDp5aelUnd8Gi-_p7nGsW25XT8
-      -_EMAIL=admin@123.com
-      -ADMIN_PASSWORD=admin123
+      - _EMAIL=admin@123.com
+      - ADMIN_PASSWORD=admin123
       - JWT_SECRET=hasangi
     restart: always
 
