@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        DOCKERHUB_CREDENTIALS = 'dockerhub-credentials'
+        DOCKERHUB_CREDENTIALS = 'docker-hub-creds'
         DOCKERHUB_USERNAME = 'hasangi123'
         EC2_PUBLIC_IP = '13.234.116.85' 
         EC2_USER = 'ubuntu'
@@ -14,7 +14,7 @@ pipeline {
             steps {
                 git branch: 'main',
                     url: 'https://github.com/Chathurdha2024/Forever-fashion-app.git',
-                    credentialsId: 'github-token'
+                    credentialsId: 'github-token2'
             }
         }
 
