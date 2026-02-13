@@ -63,6 +63,32 @@ resource "aws_security_group" "fashion_app_sg" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 }
+# 3. Security Group for Jenkins Server
+resource "aws_security_group" "jenkins_sg" {
+  name        = "jenkins_server_sg"
+  description = "Allow SSH and Jenkins UI"
+
+  ingress {
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  ingress {
+    from_port   = 8080
+    to_port     = 8080
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
 
 # 3. Generate SSH Key Pair Automatically
 resource "tls_private_key" "fashion_key" {
@@ -113,7 +139,51 @@ resource "aws_instance" "fashion_server" {
   }
 }
 
+# 6. The Jenkins Server
+resource "aws_instance" "jenkins_server" {
+  ami                    = data.aws_ami.ubuntu.id
+  instance_type          = "t3.micro" # Better for Docker builds
+  key_name               = aws_key_pair.fashion_app_key.key_name
+  vpc_security_group_ids = [aws_security_group.jenkins_sg.id]
+
+  user_data = <<-EOF
+              #!/bin/bash
+              sudo apt-get update -y
+
+              # 1. Create Swap File (2GB) - CRITICAL for Jenkins on t3.micro
+              sudo fallocate -l 2G /swapfile
+              sudo chmod 600 /swapfile
+              sudo mkswap /swapfile
+              sudo swapon /swapfile
+              echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
+
+              # 2. Install Java
+              sudo apt-get install -y fontconfig openjdk-17-jre
+
+              # 3. Install Jenkins
+              sudo wget -O /usr/share/keyrings/jenkins-keyring.asc https://pkg.jenkins.io/debian-stable/jenkins.io-2023.key
+              echo "deb [signed-by=/usr/share/keyrings/jenkins-keyring.asc] https://pkg.jenkins.io/debian-stable binary/" | sudo tee /etc/apt/sources.list.d/jenkins.list > /dev/null
+              sudo apt-get update -y
+              sudo apt-get install -y jenkins
+              sudo systemctl start jenkins
+              sudo systemctl enable jenkins
+
+              # 4. Install Docker
+              sudo apt-get install -y docker.io
+              sudo usermod -aG docker jenkins
+              sudo usermod -aG docker ubuntu
+              sudo systemctl restart jenkins
+              EOF
+
+  tags = { Name = "Jenkins-Master-Server" }
+}
+
+
 # 5. Output the Public IP
 output "fashion_server_ip" {
   value = aws_instance.fashion_server.public_ip
+}
+
+output "jenkins_url" {
+  value = "http://${aws_instance.jenkins_server.public_ip}:8080"
 }
