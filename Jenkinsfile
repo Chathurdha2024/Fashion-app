@@ -4,11 +4,11 @@ pipeline {
     environment {
         DOCKERHUB_CREDENTIALS = 'dockerhub-credentials'
         DOCKERHUB_USERNAME = 'hasangi123'
-        EC2_PUBLIC_IP = '13.234.116.85' 
+        EC2_PUBLIC_IP = '65.0.30.30' 
         EC2_USER = 'ubuntu'
         SSH_KEY_ID = 'fashion-aws-key'
     }
-    
+
     stages {
         stage('Clone') {
             steps {
