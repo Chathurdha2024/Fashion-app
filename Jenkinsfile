@@ -74,15 +74,28 @@ pipeline {
                 }
             }
         }
-        stage('Deploy to EC2') {
+     stage('Deploy to EC2') {
     steps {
         script {
+            // Ensure these variables are defined in your environment {} block
+            // or defined globally. If they are empty, the command will fail.
+            echo "Checking variables: User is ${EC2_USER}, IP is ${EC2_PUBLIC_IP}, Key ID is ${SSH_KEY_ID}"
+            
             sshagent(credentials: [SSH_KEY_ID]) {
-                // 1. Copy the docker-compose file
-                sh "scp -o StrictHostKeyChecking=no docker-compose.yml ${EC2_USER}@${EC2_PUBLIC_IP}:/home/ubuntu/docker-compose.yml"
+                // 1. We add '-v' to the commands to see the detailed SSH "handshake"
+                // 2. We use -o StrictHostKeyChecking=no to prevent hanging on confirmation
                 
-                // 2. SSH and Deploy using a single string of command
-                sh "ssh -o StrictHostKeyChecking=no ${EC2_USER}@${EC2_PUBLIC_IP} 'sudo docker compose pull && sudo docker compose up -d && sudo docker image prune -f'"
+                sh """
+                    scp -v -o StrictHostKeyChecking=no docker-compose.yml ${EC2_USER}@${EC2_PUBLIC_IP}:/home/${EC2_USER}/docker-compose.yml
+                """
+                
+                sh """
+                    ssh -v -o StrictHostKeyChecking=no ${EC2_USER}@${EC2_PUBLIC_IP} "
+                        sudo docker compose pull && 
+                        sudo docker compose up -d && 
+                        sudo docker image prune -f
+                    "
+                """
             }
         }
     }
