@@ -15,7 +15,7 @@ const LatestCollection = () => {
   return (
     <div className='my-10'>
       <div className='text-center py-8 text-3xl'>
-         <Title text1={'LATEST'} text2={'Fashion'}/>
+         <Title text1={'LATEST'} text2={'fashion'}/>
          <p className='w-3/4 m-auto text-xs sm:text-sm md:text-base text-gray-600'>
          Lorem ipsum is a dummy or placeholder text commonly used in graphic design, publishing, and web development. Its purpose is to permit a page layout
          </p>
